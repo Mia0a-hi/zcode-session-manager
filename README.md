@@ -32,30 +32,42 @@
 
 通过 `zcode-session-manager`，手机端与电脑端之间的记忆鸿沟被彻底填平：
 
-```text
- ┌──────────────────────────────────────┐          ┌──────────────────────────────────────┐
- │          PC / Mac 电脑桌面端         │          │         手机移动端 (企微/飞书/钉钉)    │
- │  · 运行 ZCode 完成复杂长链任务开发   │          │  · 随时随地拿出手机想继续推进任务   │
- │  · 产生丰富的本地 Session 上下文     │          │  · 痛点：默认无法读取电脑上聊了什么  │
- └──────────────────┬───────────────────┘          └──────────────────┬───────────────────┘
-                    │                                                 │
-                    │ 本地 SQLite 存储                                │ 通过 IM 发起请求
-                    ▼                                                 ▼
- ┌────────────────────────────────────────────────────────────────────────────────────────┐
- │                      zcode-session-manager (跨端记忆中继调度)                         │
- │                                                                                        │
- │  1. 手机端唤起：发一条 “看看刚才电脑在聊啥” 或 “列出今天下午的会话”                  │
- │  2. 极速检索：19ms 内存映射秒级提取桌面端历史会话列表及清晰摘要                       │
- │  3. 无缝接续：回复 “接续第1个会话” 或指定 Session ID                                  │
- │  4. 记忆注入：调用 ReadSessionContext (Handoff 策略) 提取上个会话的完整任务与交接点   │
- └──────────────────────────────────────────┬─────────────────────────────────────────────┘
-                                            │
-                                            ▼
-                        ┌──────────────────────────────────────┐
-                        │      手机端瞬间唤醒记忆，丝滑继续聊！ │
-                        │  · 无需打字重复复述背景             │
-                        │  · 完美承接电脑端未竟事项与决策逻辑 │
-                        └──────────────────────────────────────┘
+<div align="center">
+  <img src="assets/mobile-im-demo.jpg" alt="手机移动端 IM 无缝接力电脑桌面端 AI 效果" width="360" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 16px 0;" />
+  <p><em>▲ 真实场景演示：在手机移动端（企业微信/飞书）随时唤起桌面端 AI 记忆，无缝继承上下文推进开发</em></p>
+</div>
+
+```mermaid
+flowchart TD
+    subgraph Desktop [💻 PC / Mac 电脑桌面端]
+        D1[运行 ZCode 完成复杂长链任务开发]
+        D2[产生丰富的本地 Session 上下文与决策状态]
+        D3[(本地 SQLite 数据库)]
+        D1 --> D2 --> D3
+    end
+
+    subgraph Mobile [📱 手机移动端 企微 / 飞书 / 钉钉]
+        M1[离开工位，拿出手机想继续推进]
+        M2[传统痛点: 实例孤立，无历史上下文]
+        M1 --> M2
+    end
+
+    subgraph Relay [⚡ zcode-session-manager 跨端记忆中继调度]
+        R1[1. 手机端唤起: 发送 '看看刚才电脑在聊啥' 或 '列出今天下午的会话']
+        R2[2. 极速检索: 19ms 内存映射秒级提取桌面端历史会话与清晰摘要]
+        R3[3. 无缝接续: 回复 '接续第1个会话' 或指定 Session ID]
+        R4[4. 记忆注入: 调用 ReadSessionContext 注入完整任务与交接点]
+        R1 --> R2 --> R3 --> R4
+    end
+
+    D3 -.->|本地只读 mmap 极速提取| Relay
+    M2 -->|通过 IM 发起接力请求| Relay
+    Relay ==>|手机端瞬间唤醒记忆，丝滑继续聊| Target[🎉 手机端无缝继续对话！无需打字重复复述背景]
+
+    style Desktop fill:#f8fafc,stroke:#94a3b8,stroke-width:1px
+    style Mobile fill:#f8fafc,stroke:#94a3b8,stroke-width:1px
+    style Relay fill:#eff6ff,stroke:#3b82f6,stroke-width:2px
+    style Target fill:#f0fdf4,stroke:#22c55e,stroke-width:2px
 ```
 
 ### 🚀 核心特性
@@ -130,30 +142,37 @@ As organizations connect ZCode and AI Coding Agents to mobile Instant Messaging 
 3. **Instant Handoff**: Reply *"Continue from session #1"* or provide the target Session ID.
 4. **Context Injection**: Uses `ReadSessionContext` (with `handoff` strategy) to inject previous tasks, code context, and next steps into your mobile conversation.
 
-```text
- ┌──────────────────────────────────────┐          ┌──────────────────────────────────────┐
- │         Desktop Workstation          │          │      Mobile IM (WeChat/Lark/Slack)   │
- │  · Deep development & debugging      │          │  · On-the-go task continuation      │
- │  · Generates rich local session state│          │  · Issue: isolated & no history      │
- └──────────────────┬───────────────────┘          └──────────────────┬───────────────────┘
-                    │                                                 │
-                    │ Local SQLite Storage                            │ Natural Query via IM
-                    ▼                                                 ▼
- ┌────────────────────────────────────────────────────────────────────────────────────────┐
- │                   zcode-session-manager (Cross-Device Context Relay)                   │
- │                                                                                        │
- │  1. Mobile Trigger: "What was I working on my desktop?"                                │
- │  2. Sub-20ms Search: Fast mmap lookup of recent sessions & summaries                   │
- │  3. Handoff Request: "Continue from session #1"                                        │
- │  4. Context Injection: ReadSessionContext injects full task memory into mobile thread  │
- └──────────────────────────────────────────┬─────────────────────────────────────────────┘
-                                            │
-                                            ▼
-                        ┌──────────────────────────────────────┐
-                        │    Mobile AI Instantly Remembers!    │
-                        │  · No repetitive background typing   │
-                        │  · Seamlessly resume where you left  │
-                        └──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Desktop [💻 Desktop Workstation]
+        D1[Deep development & multi-turn debugging]
+        D2[Rich local session state & decision history]
+        D3[(Local SQLite Database)]
+        D1 --> D2 --> D3
+    end
+
+    subgraph Mobile [📱 Mobile IM WeChat / Lark / Slack]
+        M1[On-the-go task continuation]
+        M2[Pain Point: Isolated blank session without context]
+        M1 --> M2
+    end
+
+    subgraph Relay [⚡ zcode-session-manager Context Relay]
+        R1[1. Mobile Query: 'What was I working on my desktop?']
+        R2[2. Sub-20ms Search: Fast SQLite mmap lookup]
+        R3[3. Handoff Request: 'Continue from session #1']
+        R4[4. Context Injection: ReadSessionContext restores state]
+        R1 --> R2 --> R3 --> R4
+    end
+
+    D3 -.->|Local read-only mmap| Relay
+    M2 -->|Natural Query via IM| Relay
+    Relay ==>|Mobile AI instantly remembers| Target[🎉 Seamless Task Continuation Without Re-typing!]
+
+    style Desktop fill:#f8fafc,stroke:#94a3b8,stroke-width:1px
+    style Mobile fill:#f8fafc,stroke:#94a3b8,stroke-width:1px
+    style Relay fill:#eff6ff,stroke:#3b82f6,stroke-width:2px
+    style Target fill:#f0fdf4,stroke:#22c55e,stroke-width:2px
 ```
 
 ### 🌟 Key Highlights
