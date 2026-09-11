@@ -32,11 +32,6 @@
 
 通过 `zcode-session-manager`，手机端与电脑端之间的记忆鸿沟被彻底填平：
 
-<div align="center">
-  <img src="assets/mobile-im-demo.jpg" alt="手机移动端 IM 无缝接力电脑桌面端 AI 效果" width="360" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 16px 0;" />
-  <p><em>▲ 真实场景演示：在手机移动端（企业微信/飞书）随时唤起桌面端 AI 记忆，无缝继承上下文推进开发</em></p>
-</div>
-
 ```mermaid
 flowchart TD
     subgraph Desktop [💻 PC / Mac 电脑桌面端]
