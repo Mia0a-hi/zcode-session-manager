@@ -11,7 +11,7 @@
 [![Zero Dependency](https://img.shields.io/badge/Dependencies-Standard%20Library%20Only-orange?style=flat-square)](https://github.com/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square)](https://github.com/)
 
-[🇨🇳 中文文档](#-中文文档) • [🇬🇧 English Documentation](#-english-documentation) • [🤖 AI 一键安装](#-极简交付让-ai-帮您一键安装--ai-assisted-installation) • [💻 命令行速查](#-命令行速查--cli-cheat-sheet)
+[🇨🇳 中文文档](#-中文文档) • [🇬🇧 English Documentation](#-english-documentation)
 
 </div>
 
@@ -66,104 +66,153 @@
 - 📋 **一键提取与复制**：提供 `-c / --copy <序号>`，直接打印对应会话 ID，方便在手机端或 CLI 中一键输入“切到该会话”。
 - 🔒 **纯离线与脱敏安全**：纯本地操作，零外部依赖，示例完全通用化脱敏。
 
+### 🤖 极简交付：让 AI 帮您一键安装（推荐）
+
+无需手动繁琐复制，将 `zcode-session-manager` 目录放在任意工作区，直接将以下提示词发送给您的 **ZCode Agent**：
+
+```text
+请帮我安装当前目录下的 zcode-session-manager 技能：将其复制部署到我的全局技能目录（~/.zcode/skills/zcode-session-manager/），确保包含 SKILL.md 与 scripts/list_sessions.py，并测试运行 list_sessions.py -n 3 验证安装成功。
+```
+
+### 💻 命令行速查 (CLI Cheat Sheet)
+
+```bash
+# 1. 默认极速浏览 (最新 25 条，终端自适应高亮 + 相对时间)
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py
+
+# 2. 仅看今天活跃会话
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -t
+
+# 3. 关键字模糊搜索（按标题或 Session ID 过滤，命中词高亮）
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -s "重构"
+
+# 4. 快捷提取 ID：直接打印第 1 个会话的 ID (适合快速复制或命令管道)
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -c 1
+
+# 5. 指定拉取数量 (如最新 50 条)
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -n 50
+
+# 6. 输出标准 Markdown 表格 (适合直接复制给大模型或写入文档)
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py --md
+
+# 7. 输出标准 JSON 格式 (适合工具链与程序自动化)
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py --json
+
+# 8. 禁用色彩高亮 (输出纯文本)
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py --no-color
+```
+
+### 💬 自然语言交互指令
+
+在手机 IM 或电脑桌面端 ZCode 中，随时使用自然语言唤醒：
+- `“看看刚才电脑在聊什么”`
+- `“列出今天下午的活跃会话”`
+- `“帮我查找关于 <关键词> 的会话”`
+- `“接续第 1 个会话继续工作”`
+- `“读取会话 sess_xxx 的上下文背景”`
+
 ---
 
 ## 🇬🇧 English Documentation
 
 ### 📱 Motivation: Seamless Context Handoff (Desktop ⇄ Mobile IM)
 
-#### 1. The Real-World Pain Point
-As enterprises integrate ZCode / AI Coding Agents into mobile Instant Messengers (e.g., **WeChat Work, Feishu/Lark, DingTalk, Slack**), developers face a frustrating context gap:
-- **The Cross-Device Amnesia**: You spend hours debugging complex logic and designing architectures with ZCode on your desktop workstation. When you step away from your desk (commuting, in a meeting, or at home), you pull out your phone hoping to continue with the AI.
-- **Disconnected Context**: The mobile IM starts an isolated, blank conversation. **The mobile client cannot access your desktop machine's local SQLite database**. The AI acts like a stranger, having zero memory of the code or decisions made minutes ago.
-- **Painful Re-Typing**: Typing out long context explanations and pasting code snippets on a mobile keyboard is tedious and inefficient.
+#### 1. The Real-World Problem
+As organizations connect ZCode and AI Coding Agents to mobile Instant Messaging platforms (such as **WeChat Work, Feishu/Lark, DingTalk, and Slack**), engineers encounter a major bottleneck:
+- **Cross-Device Context Amnesia**: You spend hours debugging complex code, refactoring logic, and discussing architectures on your desktop workstation. When you step away from your desk, you open your mobile IM to continue working with the AI.
+- **Isolated Instances**: Mobile IM creates a brand-new, isolated session. **The mobile client cannot access your local desktop SQLite database**. The AI responds like a stranger, unaware of previous discussions or decisions.
+- **Tedious Mobile Typing**: Explaining project context and pasting code snippets on a mobile screen is inefficient and frustrating.
 
 #### 2. The Solution: `zcode-session-manager` as Context Relay
-`zcode-session-manager` bridges this gap effortlessly:
-1. **Query on Mobile**: Send a simple prompt in your mobile IM: *"What was I working on my desktop?"* or *"List today's sessions"*.
-2. **Sub-20ms Retrieval**: Uses SQLite memory-mapped I/O (mmap) to query desktop session metadata in milliseconds.
-3. **Seamless Handoff**: Reply *"Continue from session #1"* or provide the Session ID.
-4. **Context Injection**: Calls `ReadSessionContext` (using the `handoff` strategy) to inject previous tasks, decisions, and state into the mobile session. **Pick up exactly where you left off without typing a single background paragraph!**
+`zcode-session-manager` bridges this gap seamlessly:
+1. **Query via Mobile IM**: Send a simple message: *"What was I working on my desktop?"* or *"List today's sessions"*.
+2. **Sub-20ms Retrieval**: Queries desktop session metadata in milliseconds using SQLite memory-mapped I/O (mmap).
+3. **Instant Handoff**: Reply *"Continue from session #1"* or provide the target Session ID.
+4. **Context Injection**: Uses `ReadSessionContext` (with `handoff` strategy) to inject previous tasks, code context, and next steps into your mobile conversation.
+
+```text
+ ┌──────────────────────────────────────┐          ┌──────────────────────────────────────┐
+ │         Desktop Workstation          │          │      Mobile IM (WeChat/Lark/Slack)   │
+ │  · Deep development & debugging      │          │  · On-the-go task continuation      │
+ │  · Generates rich local session state│          │  · Issue: isolated & no history      │
+ └──────────────────┬───────────────────┘          └──────────────────┬───────────────────┘
+                    │                                                 │
+                    │ Local SQLite Storage                            │ Natural Query via IM
+                    ▼                                                 ▼
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │                   zcode-session-manager (Cross-Device Context Relay)                   │
+ │                                                                                        │
+ │  1. Mobile Trigger: "What was I working on my desktop?"                                │
+ │  2. Sub-20ms Search: Fast mmap lookup of recent sessions & summaries                   │
+ │  3. Handoff Request: "Continue from session #1"                                        │
+ │  4. Context Injection: ReadSessionContext injects full task memory into mobile thread  │
+ └──────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                            │
+                                            ▼
+                        ┌──────────────────────────────────────┐
+                        │    Mobile AI Instantly Remembers!    │
+                        │  · No repetitive background typing   │
+                        │  · Seamlessly resume where you left  │
+                        └──────────────────────────────────────┘
+```
 
 ### 🌟 Key Highlights
 
-| Feature / 特性 | Description (中文) | Description (English) |
-|---|---|---|
-| **⚡ Sub-20ms Latency** | 启用 256MB SQLite 内存映射 (mmap)，纯内存零拷贝极速直读 | Powered by 256MB SQLite mmap I/O for zero-copy memory reads |
-| **🎨 CJK-Aware Terminal UI** | 内置 CJK 全角字符宽度算法，自适应终端列宽，超长标题绝不折行爆屏 | Native CJK wide-character alignment prevents terminal line wrapping |
-| **🕒 Humanized Timestamps** | 自动呈现“刚刚”、“5分钟前”、“昨天 17:41”，一目了然定位最近会话 | Displays intuitive relative times ("just now", "10m ago", "yesterday") |
-| **📋 Instant Session Copy** | `-c / --copy <INDEX>` 一键打印对应 Session ID，极速复制切换 | Quick-extract session ID for instant terminal or pipe switching |
-| **🔒 Zero Dependency & Safe** | 纯 Python 标准库驱动，无第三方依赖，离线脱敏无外泄风险 | Pure Python standard library with zero external dependencies |
+| Feature | Description |
+|---|---|
+| **⚡ Sub-20ms Latency** | Powered by 256MB SQLite mmap I/O for zero-copy memory reads |
+| **🎨 CJK-Aware Terminal UI** | Native CJK wide-character alignment prevents terminal line wrapping |
+| **🕒 Humanized Timestamps** | Displays intuitive relative times ("just now", "10m ago", "yesterday") |
+| **📋 Instant Session Copy** | `-c / --copy <INDEX>` prints Session ID directly for fast switching |
+| **🔒 Zero Dependencies** | Pure Python standard library with zero external packages |
 
----
+### 🤖 AI-Assisted Installation (Recommended)
 
-## 🤖 极简交付：让 AI 帮您一键安装 / AI-Assisted Installation
+No manual copying required. Place the `zcode-session-manager` directory in any workspace and send this prompt to your **ZCode Agent**:
 
-无需手动解压或繁琐地翻找隐藏目录，只需将 `zcode-session-manager` 目录放在任意工作区，直接将以下提示词发送给您的 **ZCode Agent**，AI 将全自动完成部署与测试：
-
-### 提示词模板 1：全局用户安装（推荐，所有项目通用）/ Global User Install
-```text
-请帮我安装当前目录下的 zcode-session-manager 技能：将其复制部署到我的全局技能目录（~/.zcode/skills/zcode-session-manager/），确保包含 SKILL.md 与 scripts/list_sessions.py，并测试运行 list_sessions.py -n 3 验证安装成功。
-```
-*English Prompt:*
 ```text
 Please install the zcode-session-manager skill from the current directory: copy it to my global user skills directory (~/.zcode/skills/zcode-session-manager/), ensure SKILL.md and scripts/list_sessions.py are in place, and run list_sessions.py -n 3 to verify the installation.
 ```
 
-### 提示词模板 2：当前工程专属安装 / Workspace-Only Install
-```text
-请帮我把当前目录下的 zcode-session-manager 部署到当前工作区的 .zcode/skills/zcode-session-manager/ 目录中，并验证文件完整性。
-```
-
----
-
-## 💻 命令行速查 / CLI Cheat Sheet
+### 💻 CLI Cheat Sheet
 
 ```bash
-# 1. 默认极速浏览 (最新 25 条，终端自适应高亮 + 相对时间)
-# Default view: latest 25 sessions with adaptive columns & relative timestamps
+# 1. Default view (latest 25 sessions with adaptive columns & relative time)
 python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py
 
-# 2. 仅看今天活跃会话 / Filter today's active sessions only
+# 2. Filter today's active sessions only
 python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -t
 
-# 3. 关键字模糊搜索（按标题或 Session ID 过滤，命中词高亮）
-# Fuzzy keyword search (filters by title or session ID with highlights)
-python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -s "重构"
+# 3. Fuzzy keyword search by title or session ID
+python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -s "refactor"
 
-# 4. 快捷提取 ID：直接打印第 1 个会话的 ID (适合快速复制或命令管道)
-# Quick copy: print the Session ID of index 1 (ideal for copy/paste or piping)
+# 4. Extract and print Session ID of index 1 (ideal for copy or piping)
 python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -c 1
 
-# 5. 指定拉取数量 (如最新 50 条) / Fetch specified count
+# 5. Fetch a specific number of records
 python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py -n 50
 
-# 6. 输出标准 Markdown 表格 (适合直接复制给大模型或写入文档)
-# Output standard Markdown table format
+# 6. Output standard Markdown table format
 python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py --md
 
-# 7. 输出标准 JSON 格式 (适合工具链与程序自动化)
-# Output standard JSON format
+# 7. Output standard JSON format
 python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py --json
 
-# 8. 禁用色彩高亮 (输出纯文本) / Disable ANSI colors
+# 8. Disable ANSI colors (plain text output)
 python ~/.zcode/skills/zcode-session-manager/scripts/list_sessions.py --no-color
 ```
 
----
+### 💬 Natural Language Commands
 
-## 🤖 自然语言交互范式 / Natural Language Interaction
-
-在手机 IM 或电脑桌面端 ZCode 中，随时使用自然语言唤醒：
-- `“看看刚才电脑在聊什么”` / *"What was I working on my desktop?"*
-- `“列出今天下午的活跃会话”` / *"List active sessions from this afternoon"*
-- `“帮我查找关于 <关键词> 的会话”` / *"Search sessions related to <keyword>"*
-- `“接续第 1 个会话继续工作”` / *"Continue from session #1"*
-- `“读取会话 sess_xxx 的上下文背景”` / *"Read context from sess_xxx"*
+Use natural language anytime in your mobile IM or desktop ZCode:
+- *"What was I working on my desktop?"*
+- *"List active sessions from this afternoon"*
+- *"Search sessions related to <keyword>"*
+- *"Continue from session #1"*
+- *"Read context from sess_xxx"*
 
 ---
 
-## 📄 开源许可证 / License
+## 📄 License
 
-本项目采用 [MIT License](LICENSE) 授权。
-Distributed under the MIT License.
+Distributed under the [MIT License](LICENSE).
